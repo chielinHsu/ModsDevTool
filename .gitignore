@@ -1,0 +1,11 @@
+node_modules/
+
+# Claude Code 引擎每次載入 mod 時產生的型別與 tsconfig
+mods/*/.claude-plugin/types/
+*.log
+
+# AI 協作：個人設定、worktree 與量測輸出
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md
+.ai/bench/

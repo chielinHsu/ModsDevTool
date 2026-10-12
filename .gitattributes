@@ -1,0 +1,5 @@
+# 文字檔一律 LF，讓各平台的 mod 內容雜湊一致
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.woff2 binary

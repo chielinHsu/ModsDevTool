@@ -1,0 +1,15 @@
+{
+  "name": "mods-dev-tool",
+  "private": true,
+  "type": "module",
+  "description": "Claude Code mods and a cross-machine sync script",
+  "scripts": {
+    "test": "node --test tests/mods.test.mjs",
+    "mods": "node scripts/mods.mjs",
+    "check:ai": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ai/check-ai-structure.ps1",
+    "check:routing": "node scripts/ai/check-model-routing.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
