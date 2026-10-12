@@ -1,18 +1,72 @@
-# AI changelog
+# AI 工作紀錄
 
-新增置頂。只記已進入專案的結果。
+> 只新增，新紀錄放最上方。每個 agent session 一筆，讓下一位 agent 知道上一位做過什麼、為什麼。
+> agent 欄位寫實際的工具與模型；不要從舊紀錄抄。
 
-## 2026-10-12｜建立 repo、同步腳本與共用協作骨架（ADR-001）
+## 格式
 
-- **變更**：
-  - 新增 `scripts/mods.mjs`、`scripts/mods/lib.mjs`、`tests/mods.test.mjs`：跨機台同步 mod（本機 `~/.claude/mods`、`~/.claude/dev-mods` ⇄ repo `mods/<name>`），預設只新增缺少的 mod；Windows 經 `cmd.exe` 呼叫 `claude plugin validate`，網路 git 指令用 schannel。
-  - 以腳本 push 收錄 `mods/blast-radius`、`mods/replay-theater`（來源 `~/.claude/mods/`，與開發 session 的草稿內容相同），產生 `.claude-plugin/marketplace.json`。
-  - 依 `project-bootstrap-spec.md` 建立協作骨架；通用檔沿用 stock-aquarium 參考實作，角色檔、路由 `PROFILE`、案例與環境變數前綴（`MODSDEV_ROUTER`）改為本專案內容。
-  - 新增 `README.md`、`.gitignore`、`.gitattributes`、`package.json`。
-- **驗證**：
-  - `node --test tests/mods.test.mjs`：16/16 通過（VERIFIED）。
-  - `node scripts/ai/check-model-routing.mjs`：162/162 通過（靜態設定與本機 hook 行為）。
-  - `check-ai-structure.ps1`：0 失敗、3 警告（刻意標記的 `TODO(project)`）；`sync-skills.ps1 -Check` 一致。暫存副本刪除角色檔、改錯 model、手改技能鏡像，兩支檢查器皆 exit 1。
-  - `claude plugin validate`：兩個 mod 與 marketplace 通過（只剩未填 author 的警告）。
-  - 端對端：實際 `push blast-radius replay-theater` 推上 GitHub；暫存 clone + 假設定目錄執行 `sync --no-push`，安裝 2 個 mod、註冊並保留原設定與備份、把本機獨有的 mod commit 進暫存 clone，第二次執行無重複動作。
-  - 未驗證：其他機器實際載入、macOS／Linux、bench（需授權）。
+```markdown
+## YYYY-MM-DD — Claude Code (模型) ／ Codex (模型)
+
+### 完成
+- 做了什麼（一行一件）
+
+### 修改的檔案
+- path/to/file
+
+### 驗證
+- 實際執行的指令與結果；沒執行就寫「未驗證」與原因
+
+### 未完成
+- 還沒做完的事
+
+### 注意事項
+- 下一位 agent 需要知道的限制、否決的做法、不要還原的修改
+```
+
+## 2026-10-12 — Claude Code (Claude Opus 5.5)（套用 AutomaticDetectionDev 範本與 commit 規範）
+
+### 完成
+- 以 AutomaticDetectionDev 的 `ai-project-template/New-AiProject.ps1 -Refresh` 套用範本 1.0.0；範本管理的檔案與範本一致，`skill-sync.json` 改為範本格式（ADR-000）。
+- 依範本重寫入口與專案文件；`project-rules.md` 的「Commit 訊息」逐字沿用範本，加上分支流程與同步腳本 commit 的規則。
+- 決策改為 `docs/adr/` 一檔一決策，`docs/decisions.md` 改為索引。
+- 同步腳本：commit 訊息改用 `buildCommitMessage`（範本骨架）並寫成檔案後 `git commit -F`；`push`／`sync` 限定 `main`（`--dry-run` 不限）。
+- repo 的 `user.email` 改為 `chielin0025@hotmail.com`。
+
+### 修改的檔案
+- `AGENTS.md`、`CLAUDE.md`、`AI_CONTEXT.md`、`.agents/harness/*`、`.agents/skills/ai-handoff/SKILL.md`、`.claude/skills/ai-handoff/SKILL.md`、`.claude/settings.json`、`.ai/handoff.md`
+- `docs/architecture.md`、`docs/decisions.md`、`docs/adr/000-ai-agent-structure.md`、`docs/adr/001-mods-sync-and-install.md`、`docs/current-status.md`、`docs/changelog-ai.md`
+- `scripts/ai/check-ai-structure.ps1`、`scripts/ai/sync-skills.ps1`、`scripts/mods.mjs`、`scripts/mods/lib.mjs`、`tests/mods.test.mjs`、`.gitattributes`、`README.md`
+
+### 驗證
+- `node --test tests/mods.test.mjs`：21／21 通過（新增 5 個 commit 訊息測試）。
+- 暫存副本（`main`、假的設定目錄）實際執行 `push demo-local --no-push`：產生的 commit 訊息符合骨架，只 commit `mods/demo-local` 與 `marketplace.json`，訊息檔用完即刪。
+- 工作分支上 `push` 被擋、`push --dry-run` 可以執行。
+- 結構、技能鏡像與路由檢查的結果見下一位交接單（`.ai/handoff.md`）。
+
+### 未完成
+- 2026-10-12 前的四個 commit 仍是舊格式與舊信箱；改寫需要 force push，待使用者決定。
+
+### 注意事項
+- 範本管理的檔案（`engineering-workflow.md`、`TEMPLATE_VERSION`、`ai-handoff` skill、`scripts/ai/check-ai-structure.ps1`、`scripts/ai/sync-skills.ps1`）不要在本專案修改。
+- 模型路由沿用依全域規格建立的版本，沒有改用 AutomaticDetectionDev 的路由（理由見 ADR-000）。
+
+## 2026-10-12 — Claude Code (Claude Opus 5.5)（建立 repo 與同步腳本）
+
+### 完成
+- 新增 `scripts/mods.mjs`、`scripts/mods/lib.mjs`、`tests/mods.test.mjs`：跨機台同步 mod（本機 `~/.claude/mods`、`~/.claude/dev-mods` ⇄ repo `mods/<name>`），預設只新增缺少的 mod。
+- 以腳本 push 收錄 `mods/blast-radius`、`mods/replay-theater`，產生 `.claude-plugin/marketplace.json`。
+- 依全域規格建立協作骨架與五級模型路由（環境變數前綴 `MODSDEV_ROUTER`）。
+
+### 修改的檔案
+- 整個 repo 初次建立（commit `e09a194`、`a411b1e`、`8b58746`、`0129d04`）。
+
+### 驗證
+- `node --test tests/mods.test.mjs` 16／16；`check-model-routing.mjs` 162／162；兩個 mod 與 marketplace 的 `claude plugin validate` 通過。
+- 暫存 clone + 假設定目錄執行 `sync --no-push`：安裝、註冊、保留原設定與備份、加入本機獨有的 mod，第二次執行沒有重複動作。
+
+### 未完成
+- 其他機器實際載入、macOS／Linux 未驗證。
+
+### 注意事項
+- 本機 Git for Windows 的 OpenSSL 無法驗證 GitHub 憑證；腳本在 Windows 對網路 git 指令加 schannel。
