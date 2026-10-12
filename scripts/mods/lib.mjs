@@ -272,7 +272,7 @@ export function stageMods({ repoRoot, claude = claudeDir(), extraDirs = [], name
     }
     const newest = pickNewest(local.get(name));
     const inRepo = repo.get(name);
-    const entry = { name, from: newest.dir };
+    const entry = { name, from: newest.dir, kind: newest.kind, version: newest.manifest.version };
     if (!inRepo) result.added.push(entry);
     else if (inRepo.hash === newest.hash) continue;
     else if (update) result.updated.push(entry);
@@ -323,4 +323,62 @@ export function installMods({ repoRoot, claude = claudeDir(), names = [], update
   result.registered = reg.added;
   result.settingsFile = reg.file;
   return result;
+}
+
+// ---------------------------------------------------------------------------
+// commit 訊息：格式見 .agents/harness/project-rules.md「Commit 訊息」。
+// ---------------------------------------------------------------------------
+
+/** git user.name 取作者名字：`HQ\Caspar.Hsu`、`Caspar Hsu` → `Caspar`。 */
+export function authorTag(userName) {
+  const last = String(userName || '').split('\\').pop().trim();
+  return last.split(/[.\s]+/)[0] || 'unknown';
+}
+
+const SOURCE_LABEL = {
+  installed: '來自 ~/.claude/mods',
+  draft: '來自 session 草稿（~/.claude/dev-mods）',
+  extra: '來自 --from 指定的資料夾',
+};
+
+/**
+ * 同步腳本 push 的 commit 訊息。
+ * validated：每個 mod 的 `claude plugin validate` 結果（true 通過）；null 表示沒有執行。
+ * coAuthorModel：由 Claude 代為執行時的模型名稱（例如 `Opus 5.5`）；沒有就省略 Co-Authored-By 段落。
+ */
+export function buildCommitMessage({ author, added = [], updated = [], validated = null, coAuthorModel = '' }) {
+  const names = (list) => list.map((m) => m.name).join('、');
+  let title;
+  if (added.length > 0 && updated.length > 0) title = `[${author}]feat: 新增 mod：${names(added)}，並以本機版本更新：${names(updated)}`;
+  else if (added.length > 0) title = `[${author}]feat: 新增 mod：${names(added)}`;
+  else title = `[${author}]chore: 以本機版本更新 mod：${names(updated)}`;
+
+  const line = (m, what) => `- ${m.name}${m.version ? ` ${m.version}` : ''}：${what}，${SOURCE_LABEL[m.kind] || '來源不明'}`;
+  const body = [
+    '由 scripts/mods.mjs push 把本機的 mod 放進 repo 的 mods/，並重新',
+    '產生 .claude-plugin/marketplace.json。',
+    ...added.map((m) => line(m, '新增')),
+    ...updated.map((m) => line(m, '更新（--update，repo 原本的版本不同）')),
+  ];
+
+  const all = [...added, ...updated];
+  const tests =
+    validated === null
+      ? ['沒有執行 claude plugin validate（找不到 claude CLI）。']
+      : [`claude plugin validate：${all.map((m) => `${m.name} ${validated[m.name] ? '通過' : '失敗'}`).join('、')}。`];
+
+  const coAuthor = String(coAuthorModel || '').trim();
+  return [
+    title,
+    '',
+    ...body,
+    '',
+    '測試 :',
+    ...tests,
+    '',
+    ...(coAuthor ? [`Co-Authored-By: Claude ${coAuthor}`, ''] : []),
+    '[Test]',
+    'Build OK, Test OK',
+    '',
+  ].join('\n');
 }

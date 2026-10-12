@@ -6,6 +6,8 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, test } from 'node:test';
 
 import {
+  authorTag,
+  buildCommitMessage,
   buildMarketplace,
   contentHash,
   discoverLocal,
@@ -228,4 +230,53 @@ test('status 彙整三處狀態', () => {
   assert.equal(rows['draft-only'].repoState, 'missing');
   assert.equal(rows['remote-only'].repoState, 'repo-only');
   assert.equal(rows['remote-only'].installState, 'missing');
+});
+
+describe('commit 訊息（project-rules.md「Commit 訊息」）', () => {
+  const mod = (name, kind = 'installed', version = '0.1.0') => ({ name, kind, version });
+
+  test('作者名字取自 git user.name', () => {
+    assert.equal(authorTag('Caspar Hsu'), 'Caspar');
+    assert.equal(authorTag(String.raw`HQ\Caspar.Hsu`), 'Caspar');
+    assert.equal(authorTag(''), 'unknown');
+  });
+
+  test('新增 mod：骨架、空行、測試區塊與固定結尾', () => {
+    const message = buildCommitMessage({
+      author: 'Caspar',
+      added: [mod('blast-radius'), mod('replay-theater', 'draft')],
+      validated: { 'blast-radius': true, 'replay-theater': true },
+    });
+    const lines = message.split('\n');
+    assert.equal(lines[0], '[Caspar]feat: 新增 mod：blast-radius、replay-theater');
+    assert.equal(lines[1], '');
+    assert.ok(lines.includes('- blast-radius 0.1.0：新增，來自 ~/.claude/mods'));
+    assert.ok(lines.includes('- replay-theater 0.1.0：新增，來自 session 草稿（~/.claude/dev-mods）'));
+    const at = lines.indexOf('測試 :');
+    assert.equal(lines[at - 1], '');
+    assert.equal(lines[at + 1], 'claude plugin validate：blast-radius 通過、replay-theater 通過。');
+    assert.deepEqual(lines.slice(-4), ['', '[Test]', 'Build OK, Test OK', '']);
+    assert.ok(!message.includes('Co-Authored-By'));
+    for (const line of lines) assert.ok([...line].length <= 76, line);
+  });
+
+  test('由 Claude 執行時加上不帶 email 的 Co-Authored-By，前後各空一行', () => {
+    const lines = buildCommitMessage({ author: 'Caspar', added: [mod('a')], validated: { a: true }, coAuthorModel: 'Opus 5.5' }).split('\n');
+    const at = lines.indexOf('Co-Authored-By: Claude Opus 5.5');
+    assert.ok(at > 0);
+    assert.equal(lines[at - 1], '');
+    assert.equal(lines[at + 1], '');
+    assert.equal(lines[at + 2], '[Test]');
+  });
+
+  test('只有更新時用 chore；沒有 claude CLI 時如實寫沒執行', () => {
+    const message = buildCommitMessage({ author: 'Caspar', updated: [mod('a')], validated: null });
+    assert.ok(message.startsWith('[Caspar]chore: 以本機版本更新 mod：a\n\n'));
+    assert.ok(message.includes('測試 :\n沒有執行 claude plugin validate（找不到 claude CLI）。\n'));
+  });
+
+  test('正文不寫出家目錄的完整路徑', () => {
+    const message = buildCommitMessage({ author: 'Caspar', added: [{ ...mod('a'), from: String.raw`C:\Users\someone\.claude\mods\a` }], validated: { a: true } });
+    assert.ok(!message.includes('someone'));
+  });
 });
