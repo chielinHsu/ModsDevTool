@@ -1,0 +1,6 @@
+{
+  "name": "replay-theater",
+  "version": "0.1.0",
+  "description": "Records every edit Claude makes and replays them step by step, diff by diff, with /replay",
+  "types": "./types/index.d.ts"
+}

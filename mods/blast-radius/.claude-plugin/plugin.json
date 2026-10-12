@@ -1,0 +1,6 @@
+{
+  "name": "blast-radius",
+  "version": "0.1.0",
+  "description": "Holds rm -rf / Remove-Item -Recurse and lists exactly what it would delete before you Proceed or Cancel",
+  "types": "./types/index.d.ts"
+}
