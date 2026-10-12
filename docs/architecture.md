@@ -1,4 +1,13 @@
-# 架構
+# 系統架構
+
+> 描述「現在的結構」，原地修改。為什麼這樣設計、否決過什麼，記在 `decisions.md`（索引）與 `docs/adr/`，不要寫在這裡。
+
+## 修改紀錄
+
+| 日期 | 修改者 | 說明 |
+|---|---|---|
+| 2026-10-12 | Claude Code (Claude Opus 5.5) | 套用 AutomaticDetectionDev 範本（[ADR-000](adr/000-ai-agent-structure.md)）：加上本表；`push`／`sync` 只在 `main` 執行（`--dry-run` 不限），commit 訊息由 `buildCommitMessage` 依 `project-rules.md` 產生、寫成檔案後 `git commit -F`（[ADR-001](adr/001-mods-sync-and-install.md) 的後續） |
+| 2026-10-12 | Claude Code (Claude Opus 5.5) | 建立：同步腳本、三個位置、資料流與判定規則（[ADR-001](adr/001-mods-sync-and-install.md)） |
 
 ## 一、組成
 
@@ -6,7 +15,7 @@
 |---|---|
 | `mods/<name>/` | 一個 Claude Code mod 的原始碼（function hooks plugin），repo 中的正本 |
 | `.claude-plugin/marketplace.json` | 依 `mods/*` 產生的清單；讓 repo 也能當 Claude Code marketplace 使用 |
-| `scripts/mods/lib.mjs` | 純檔案邏輯：找出 mod、計算內容雜湊、複製、產生 marketplace、註冊 `CLAUDE_CODE_PLUGIN_DIRS` |
+| `scripts/mods/lib.mjs` | 純檔案邏輯：找出 mod、計算內容雜湊、複製、產生 marketplace、註冊 `CLAUDE_CODE_PLUGIN_DIRS`、產生 commit 訊息 |
 | `scripts/mods.mjs` | 指令列：解析參數、呼叫 git（pull／add／commit／push）與 `claude plugin validate`、輸出結果 |
 | `tests/mods.test.mjs` | 以暫存資料夾驗證 `lib.mjs` |
 
@@ -49,7 +58,8 @@ flowchart LR
 - **同不同**：`listModFiles` 列出要同步的檔案（排除引擎產生的 `.claude-plugin/types/`、引擎 `tsconfig.json`、`*.log`／`*.tmp`／`*.bak`、`node_modules`、符號連結），依路徑與 LF 正規化內容計算 SHA-256。
 - **同名多份（push）**：已安裝與各 session 草稿中，取檔案修改時間最新的一份。
 - **安全界線**：
-  - push 前 `mods/` 與 `marketplace.json` 必須沒有未提交修改；有任何 mod 驗證失敗就不 commit。
+  - `push`／`sync` 只在 `main` 執行（`--dry-run` 不限）；push 前 `mods/` 與 `marketplace.json` 必須沒有未提交修改；有任何 mod 驗證失敗就不 commit。
+  - commit 訊息由 `buildCommitMessage` 依 `project-rules.md`「Commit 訊息」產生，寫到 `.git/MODS_COMMIT_MSG` 後 `git commit -F`，只 commit `mods/<name>` 與 `marketplace.json` 的明確路徑；正文不寫出家目錄的完整路徑。
   - install 取代前把舊版複製到 `~/.claude/mods-backup/<name>-<時間>`；改 `settings.json` 前寫 `settings.json.mods-backup`。
   - 不刪除任何一端的 mod。
 

@@ -1,23 +1,29 @@
 # 目前狀態
 
-更新：2026-10-12
+> 原地修改，反映「現在」。每次收工更新；歷史在 `changelog-ai.md`。保持在 80 行內。
 
-## 已完成
+- 更新日期：2026-10-12
+- 階段：可使用（兩個 mod、同步腳本、AutomaticDetectionDev 範本 1.0.0 的協作規範）
 
-- repo 結構：`mods/<name>/` 一個 mod 一個資料夾，`.claude-plugin/marketplace.json` 由腳本產生；已推上 `chielinHsu/ModsDevTool` 的 `main`。
-- 同步腳本 `scripts/mods.mjs`（`status`／`push`／`install`／`sync`，`--dry-run`／`--update`／`--no-push`／`--from`），核心 `scripts/mods/lib.mjs`，測試 `tests/mods.test.mjs`（16/16）。
-- 收錄的 mod：`blast-radius`（0.1.0）、`replay-theater`（0.1.0）。
-- Codex／Claude Code 共用協作骨架（harness-1.0.0、routing-1）。
+## 進行中
 
-## 待辦
+- 分支 `chore/adopt-ai-template`：套用範本與 commit 規範，合併回 `main` 後待使用者決定是否 push。
 
-- 其他機器第一次執行 `sync` 的實測與重開 Claude Code 後的載入確認。
-- macOS／Linux 實機驗證（`CLAUDE_CODE_PLUGIN_DIRS` 以 `:` 分隔，目前只有單元測試）。
-- 本機另有 `agents-panel`、`disk-status`、`taskboard-pane`、`usage-bar` 尚未放進 repo；要收錄時執行 `node scripts/mods.mjs push <name>`。
-- `TODO(project)`：刪除 mod 的流程（目前腳本不刪除任何一端）。
+## 待辦（依優先順序）
+
+1. 決定是否改寫 2026-10-12 前四個舊格式 commit（需要 force push）。
+2. 其他機器 `git clone` 後執行 `node scripts/mods.mjs sync`，重開 Claude Code 確認 mod 實際載入。
+3. 本機要讓 blast-radius、replay-theater 在新 session 載入：使用者執行 `node scripts/mods.mjs install`（會改 `~/.claude/settings.json`）。
+4. 本機另有 agents-panel、disk-status、taskboard-pane、usage-bar 未收錄；要收錄時 `node scripts/mods.mjs push <name>`。
+5. macOS／Linux 實機驗證（`CLAUDE_CODE_PLUGIN_DIRS` 以 `:` 分隔，目前只有單元測試）。
 
 ## 已知問題
 
 - 本機 Git for Windows 設定為 `http.sslBackend=openssl` 時無法驗證 GitHub 憑證；腳本在 Windows 自動改用 schannel，本 repo 也設定了 repo 層級的 schannel。
-- 本機的 `blast-radius`、`replay-theater` 已在 `~/.claude/mods/`，但尚未列入 `CLAUDE_CODE_PLUGIN_DIRS`；執行 `node scripts/mods.mjs install` 後重開 Claude Code 才會在新 session 載入。
 - install 會註冊所有「已安裝且在 repo 中」的 mod；若有刻意不載入的同名 mod，需在 `settings.json` 手動移除。
+- 刪除 mod 的流程未定義（腳本不刪除任何一端）。
+
+## 阻塞與待使用者決定
+
+- 是否 force push 改寫舊 commit（訊息格式與作者信箱）。
+- 本次分支合併後是否 push 到 GitHub。

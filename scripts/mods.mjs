@@ -9,6 +9,8 @@ import { fileURLToPath } from 'node:url';
 import {
   MARKETPLACE_FILE,
   MODS_DIR,
+  authorTag,
+  buildCommitMessage,
   claudeDir,
   installMods,
   stageMods,
@@ -35,6 +37,9 @@ const HELP = `用法：node scripts/mods.mjs <指令> [mod 名稱...] [選項]
 環境變數
   MODS_CLAUDE_DIR        Claude 設定目錄（預設 CLAUDE_CONFIG_DIR 或 ~/.claude）
   MODS_GIT_SSL_BACKEND   Windows 網路 git 指令的 http.sslBackend（預設 schannel；設為 default 不指定）
+  MODS_CO_AUTHOR_MODEL   由 Claude 代為執行時的模型名稱（例如 Opus 5.5），commit 會加上 Co-Authored-By
+
+push／sync 只在 main 分支執行（--dry-run 不限）；commit 訊息格式見 .agents/harness/project-rules.md。
 `;
 
 function parseArgs(argv) {
@@ -102,6 +107,12 @@ function pull(repo, dryRun) {
   log(`· 已 pull origin/${branch}`);
 }
 
+/** push／sync 只在 main 上 commit；工作分支的 commit 依 project-rules.md 的流程合併。 */
+function assertMain(repo) {
+  const branch = branchOf(repo);
+  if (branch !== 'main') throw new Error(`push／sync 只在 main 分支執行，目前在 ${branch}；先 git switch main。`);
+}
+
 /** mods/ 與 marketplace.json 有未提交修改時中止，避免蓋掉別人的變更。 */
 function assertClean(repo) {
   const dirty = git(repo, ['status', '--porcelain', '--', MODS_DIR, MARKETPLACE_FILE.split(path.sep).join('/')]).out;
@@ -160,6 +171,7 @@ function printStatus(ctx) {
 
 function push(ctx, args) {
   const { repoRoot } = ctx;
+  if (!args.dryRun) assertMain(repoRoot);
   assertClean(repoRoot);
   const staged = stageMods({ ...ctx, names: args.names, update: args.update, dryRun: args.dryRun });
   for (const u of staged.unknown) log(`! 本機找不到 mod「${u.name}」`);
@@ -178,23 +190,38 @@ function push(ctx, args) {
 
   writeMarketplace(repoRoot);
   let invalid = false;
+  let validated = {};
   for (const { name } of changed) {
     const v = validate(repoRoot, name);
-    if (!v.ran) log(`· 找不到 claude CLI，略過 ${name} 的 plugin validate`);
-    else if (v.ok) log(`· ${name}：claude plugin validate 通過`);
-    else {
-      invalid = true;
-      log(`! ${name}：claude plugin validate 失敗\n${v.out}`);
+    if (!v.ran) {
+      log(`· 找不到 claude CLI，略過 ${name} 的 plugin validate`);
+      validated = null;
+    } else {
+      if (validated) validated[name] = v.ok;
+      if (v.ok) log(`· ${name}：claude plugin validate 通過`);
+      else {
+        invalid = true;
+        log(`! ${name}：claude plugin validate 失敗\n${v.out}`);
+      }
     }
   }
   if (invalid) throw new Error('有 mod 驗證失敗，已複製進 repo 但未 commit；修正後再執行 push。');
 
   const paths = [...changed.map(({ name }) => `${MODS_DIR}/${name}`), MARKETPLACE_FILE.split(path.sep).join('/')];
   git(repoRoot, ['add', '--', ...paths]);
-  const verb = staged.updated.length > 0 && staged.added.length === 0 ? '更新' : '新增';
-  const message = `${verb} mod：${changed.map((c) => c.name).join('、')}`;
-  git(repoRoot, ['commit', '-m', message, '--', ...paths]);
-  log(`· 已 commit：${message}`);
+  // commit 訊息寫成檔案再 -F（project-rules.md「Git」）。
+  const message = buildCommitMessage({
+    author: authorTag(git(repoRoot, ['config', 'user.name'], { allowFail: true }).out),
+    added: staged.added,
+    updated: staged.updated,
+    validated,
+    coAuthorModel: process.env.MODS_CO_AUTHOR_MODEL,
+  });
+  const messageFile = path.resolve(repoRoot, git(repoRoot, ['rev-parse', '--git-path', 'MODS_COMMIT_MSG']).out);
+  fs.writeFileSync(messageFile, message, 'utf8');
+  git(repoRoot, ['commit', '-F', messageFile, '--', ...paths]);
+  fs.rmSync(messageFile, { force: true });
+  log(`· 已 commit：${message.split('\n')[0]}`);
   if (!args.push) {
     log('· --no-push：未 push。');
     return;
@@ -246,6 +273,7 @@ function main() {
       install(ctx, args);
       break;
     case 'sync':
+      if (!args.dryRun) assertMain(repoRoot);
       pull(repoRoot, args.dryRun);
       install(ctx, { ...args, names: [] });
       push(ctx, { ...args, names: [] });
