@@ -24,6 +24,26 @@
 - 下一位 agent 需要知道的限制、否決的做法、不要還原的修改
 ```
 
+## 2026-10-12 — Claude Code (Claude Opus 5.5)（改寫舊 commit 並強制推送）
+
+### 完成
+- 使用者同意後，以 `git commit-tree` 重建 `main`：四個舊格式 commit 改成「Commit 訊息」的骨架、作者改為 `chielin0025@hotmail.com`；`Co-Authored-By` 只寫模型名稱，不帶 email 或網址。tree、時間與結構不變，對照表在 ADR-000 的「後續」。
+- 合併 commit 訊息裡的 hash 換成新的；舊歷史留在本機分支 `backup/pre-rewrite`。
+- 以 `--force-with-lease` 推送 `main`。
+
+### 修改的檔案
+- `docs/adr/000-ai-agent-structure.md`、`docs/changelog-ai.md`、`docs/current-status.md`、`.ai/handoff.md`
+
+### 驗證
+- 改寫後最後的 tree 與改寫前相同（`4a1d937`）；8 個 commit 的作者與提交者都是新信箱；8 個 `Co-Authored-By` 都是 `Claude Opus 5.5`，沒有 email 或網址；8 個都有 `[Test]` 結尾；合併訊息引用的 3 個 hash 都在新的 `main` 上。
+
+### 未完成
+- 無。
+
+### 注意事項
+- 本紀錄以下的舊紀錄裡出現的 commit hash 是改寫前的，對照 ADR-000 的表。
+- `backup/pre-rewrite` 確認不需要後可以刪除（`git branch -D backup/pre-rewrite`）。
+
 ## 2026-10-12 — Claude Code (Claude Opus 5.5)（套用 AutomaticDetectionDev 範本與 commit 規範）
 
 ### 完成

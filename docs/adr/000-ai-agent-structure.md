@@ -30,3 +30,18 @@ AutomaticDetectionDev 的 `ai-project-template/`（版本 1.0.0）是跨專案�
 - 範本升級時，對本專案執行 `New-AiProject.ps1 -Path <本專案> -Refresh`；範本管理的檔案不在本專案修改。
 - 結構檢查改為範本版：不檢查路由相關檔案，路由由 `check-model-routing.mjs` 負責。
 - 2026-10-12 前的四個 commit（`e09a194`、`a411b1e`、`8b58746`、`0129d04`）是舊格式，是否改寫歷史由使用者決定（需要 force push）。
+
+## 後續（2026-10-12）：改寫舊 commit
+
+使用者同意改寫並強制推送，並要求 commit 內容提到的使用模型後面不要有網址。以 `git commit-tree` 重建 `main`：每個 commit 的 tree、作者時間、提交時間與分支／合併結構不變，只換訊息與作者信箱（`chielin0025@hotmail.com`）；舊的四個 commit 改寫成「Commit 訊息」的骨架，`Co-Authored-By` 只寫模型名稱、不帶 email 或網址，合併 commit 訊息裡引用的 hash 換成新的。改寫前後最後的 tree 相同（`4a1d937`）。舊歷史留在本機分支 `backup/pre-rewrite`（不 push）。
+
+| 舊 | 新 |
+|---|---|
+| `e09a194` | `915d246` |
+| `a411b1e` | `33ebfeb` |
+| `8b58746` | `4f48936` |
+| `0129d04` | `9edb53c` |
+| `de5c075` | `f01ef2d` |
+| `3bb5b13` | `70a0899` |
+| `14cf7b4` | `b1cbf7a` |
+| `0ed9666`（合併） | `d5efbc9` |
