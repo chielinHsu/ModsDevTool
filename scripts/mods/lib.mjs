@@ -7,7 +7,11 @@ import path from 'node:path';
 
 export const MODS_DIR = 'mods';
 export const MARKETPLACE_FILE = path.join('.claude-plugin', 'marketplace.json');
-export const DEFAULT_MARKETPLACE = { name: 'mods-dev-tool', owner: { name: 'Caspar Hsu' } };
+export const DEFAULT_MARKETPLACE = {
+  name: 'mods-dev-tool',
+  owner: { name: 'Caspar Hsu' },
+  description: "Caspar's Claude Code mods, one folder each under mods/",
+};
 export const PLUGIN_DIRS_ENV = 'CLAUDE_CODE_PLUGIN_DIRS';
 
 const NAME = /^[a-z0-9][a-z0-9-]{0,63}$/;
@@ -151,7 +155,13 @@ export function buildMarketplace(repoRoot, existing = null) {
       description: mod.manifest.description,
       ...(mod.manifest.version ? { version: mod.manifest.version } : {}),
     }));
-  return { ...base, name: base.name || DEFAULT_MARKETPLACE.name, owner: base.owner || DEFAULT_MARKETPLACE.owner, plugins };
+  return {
+    ...base,
+    name: base.name || DEFAULT_MARKETPLACE.name,
+    owner: base.owner || DEFAULT_MARKETPLACE.owner,
+    description: base.description || DEFAULT_MARKETPLACE.description,
+    plugins,
+  };
 }
 
 export function readJson(file, fallback) {

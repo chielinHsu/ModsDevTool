@@ -111,12 +111,25 @@ function assertClean(repo) {
 // ---------------------------------------------------------------------------
 // claude CLI（可選）：push 前驗證 mod
 // ---------------------------------------------------------------------------
+let claudeFound;
+function hasClaude() {
+  if (claudeFound === undefined) {
+    const probe =
+      process.platform === 'win32'
+        ? spawnSync('where', ['claude'], { encoding: 'utf8' })
+        : spawnSync('claude', ['--version'], { encoding: 'utf8' });
+    claudeFound = !probe.error && probe.status === 0;
+  }
+  return claudeFound;
+}
+
 function validate(repo, name) {
-  const res = spawnSync('claude', ['plugin', 'validate', `${MODS_DIR}/${name}`], {
-    cwd: repo,
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-  });
+  if (!hasClaude()) return { ran: false };
+  const args = ['plugin', 'validate', `${MODS_DIR}/${name}`];
+  // Windows 的 claude 是 npm 的 .cmd 包裝檔，須經 cmd.exe；參數只有固定字與 mod 名稱，不含空白。
+  const [command, argv] =
+    process.platform === 'win32' ? [process.env.ComSpec || 'cmd.exe', ['/d', '/c', 'claude', ...args]] : ['claude', args];
+  const res = spawnSync(command, argv, { cwd: repo, encoding: 'utf8' });
   if (res.error || res.status === null) return { ran: false };
   return { ran: true, ok: res.status === 0, out: `${res.stdout || ''}${res.stderr || ''}`.trim() };
 }

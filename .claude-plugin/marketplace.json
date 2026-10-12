@@ -16,5 +16,6 @@
       "description": "Records every edit Claude makes and replays them step by step, diff by diff, with /replay",
       "version": "0.1.0"
     }
-  ]
+  ],
+  "description": "Caspar's Claude Code mods, one folder each under mods/"
 }
