@@ -87,4 +87,29 @@ scripts/mods/lib.mjs         同步核心
 tests/mods.test.mjs          node --test tests/mods.test.mjs
 ```
 
-AI 協作相關的檔案（`AGENTS.md`、`CLAUDE.md`、`.agents/`、`.claude/`、`docs/`、`scripts/ai/`）是給 Codex 與 Claude Code 在這個 repo 工作時讀的。
+## 開發規範（Claude Code 與 Codex）
+
+在這個 repo 開發時，Claude Code 讀 `CLAUDE.md`、Codex 讀 `AGENTS.md`，兩者指向同一份規範（AutomaticDetectionDev 的 `ai-project-template` 1.0.0，見 `docs/adr/000-ai-agent-structure.md`）：
+
+- 專案事實與驗證指令：`AI_CONTEXT.md`
+- 工作流程：`.agents/harness/engineering-workflow.md`（範本管理，不在本專案修改）
+- 程式風格、Git 與 commit 訊息：`.agents/harness/project-rules.md`
+- 交接與紀錄：`.ai/handoff.md`、`docs/current-status.md`、`docs/changelog-ai.md`；決策：`docs/decisions.md` → `docs/adr/`
+
+commit 訊息格式（詳見 `project-rules.md`「Commit 訊息」）：
+
+```text
+[Caspar]feat: 一行修改說明
+
+<正文>
+
+測試 :
+<測試說明>
+
+Co-Authored-By: Claude <當下模型名稱>
+
+[Test]
+Build OK, Test OK
+```
+
+範本升級時：`powershell -ExecutionPolicy Bypass -File <ai-project-template>\New-AiProject.ps1 -Path <本 repo> -Refresh`。

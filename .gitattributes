@@ -1,5 +1,15 @@
-# 文字檔一律 LF，讓各平台的 mod 內容雜湊一致
+# Normalize line endings. Text is LF in the repository and in the working copy,
+# so mod content hashes are the same on every platform.
 * text=auto eol=lf
-*.png binary
-*.jpg binary
+
+# Windows-only scripts need CRLF on checkout
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Binary files
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
 *.woff2 binary

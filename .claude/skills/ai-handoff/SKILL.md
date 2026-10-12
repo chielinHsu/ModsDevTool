@@ -1,91 +1,30 @@
 ---
 name: ai-handoff
-description: 有意義的變更完成或工作中斷時，依實際 Git 狀態、diff 與驗證結果更新交接單、AI changelog、目前狀態與 ADR，並在入口或 skill 變更時執行結構檢查。用於收工、交接、切換 agent 或使用者要求「整理交接」時。
+description: "收工與交接流程。在 Claude Code 與 Codex 之間切換、結束一段有意義的修改、或使用者說「交接」「收工」「更新 handoff」「更新 changelog」「更新 status」時使用。依序更新 .ai/handoff.md、docs/changelog-ai.md、docs/current-status.md、docs/decisions.md，並執行結構檢查。純問答、沒有改動任何檔案時不需要。"
 ---
 
-# ai-handoff：收工與交接
+# AI 交接
 
-只寫實際發生且可確認的內容。不虛構驗證結果；沒做的寫 `NOT VERIFIED` 並說明原因。
+兩個 agent 看不到彼此的對話，唯一的共同記憶是 repository 內的文件。本 skill 把「做了什麼、做到哪、別動什麼」寫進那些文件。各文件的職責見 `.agents/harness/engineering-workflow.md` 第 0 節。
 
-## 1. 蒐集事實
+## 收工（交出）
 
-依序執行並保留輸出摘要（Git 命令遇到 dubious ownership 時依 `AI_CONTEXT.md` 的說明加 `-c safe.directory=...`）：
+1. 先蒐集事實，不憑記憶寫：`git status`、`git diff --stat`、本次實際執行過的驗證指令與結果。
+2. **覆寫** `.ai/handoff.md`：整份重寫，不累積歷史，保持在 60 行內。
+3. 在 `docs/changelog-ai.md` **最上方**新增一筆，格式見該檔開頭的範例。
+4. 更新 `docs/current-status.md`：把完成的項目移出待辦，新增本次發現的已知問題。
+5. 本次有設計決策（選 A 不選 B、改變介面、否決某做法）時，在 `docs/decisions.md` **最上方**新增一筆，寫明理由與否決的替代方案。決定取代舊決定時，標明取代哪一筆。
+6. 改過入口檔或 skill 時，執行 `powershell -ExecutionPolicy Bypass -File scripts/ai/check-ai-structure.ps1`，有 FAIL 先修掉。
 
-```bash
-git status --short --branch
-git diff --stat
-git diff --cached --stat
-git log --oneline -5
-```
+## 開工（接手）
 
-- 區分：本次修改、本次之前就存在的未提交修改、未追蹤檔案。來源不明的修改不得覆蓋或歸為本次成果。
-- 收集本次實際執行的驗證命令與結果（通過／失敗／略過數）；失敗另列。
-- 無專案版控時，先依 `engineering-workflow.md` 第 0 節處理。
+1. 讀 `.ai/handoff.md` 與 `docs/current-status.md`。
+2. 跑 `git status`，確認工作目錄與交接單一致；不一致時以工作目錄為準，並在回報中說明差異。
+3. 交接單列在「不要動」的項目，沒有使用者明確要求就不碰。
 
-## 2. 覆寫 `.ai/handoff.md`（≤ 60 行）
+## 寫作原則
 
-使用以下段落，全部填寫；沒有內容寫「無」：
-
-```markdown
-# 交接單
-
-更新：YYYY-MM-DD HH:mm（時區）｜分支：<branch>｜HEAD：<short sha>
-
-## 正在做
-## 已完成
-## 下一步
-## 相關檔案
-## 不要動
-## 已知問題
-## 未提交變更
-## 假設與未驗證事項
-```
-
-沒有進行中工作時，「正在做」寫「沒有進行中的交接」。
-
-## 3. 新增 `docs/changelog-ai.md` 條目（置頂）
-
-```markdown
-## YYYY-MM-DD｜<標題>
-
-### Added／Changed／Fixed／Documentation（只列有的）
-- ...
-
-### Validation
-- <命令>：<結果>（VERIFIED／PARTIALLY VERIFIED／NOT VERIFIED）
-```
-
-純問答、沒有檔案變更時不新增條目。只記已進入專案的結果，不寫討論與重試細節。
-
-## 4. 更新 `docs/current-status.md`
-
-原地更新完成項目、待辦與已知問題；不要把歷史堆在這裡。
-
-## 5. 有設計決策時新增 ADR
-
-在 `docs/decisions.md` 的 ADR 區塊置頂新增：
-
-```markdown
-### ADR-NNN｜YYYY-MM-DD｜<標題>
-
-- 狀態：Accepted（取代舊決策時寫 `Supersedes ADR-XXX`，並在舊條目註記 `Superseded by ADR-NNN`）
-- 背景：
-- 決定：
-- 理由：
-- 替代方案：
-- 後果：
-```
-
-## 6. 結構檢查
-
-入口文件（`AGENTS.md`、`CLAUDE.md`、`AI_CONTEXT.md`、`MODEL_ROUTING.md`）、harness 或 skill 有變更時執行：
-
-```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ai/sync-skills.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ai/check-ai-structure.ps1
-node scripts/ai/check-model-routing.mjs
-```
-
-## 7. 回報
-
-回報交接單重點、更新的檔案與檢查結果。未經授權不 stage、commit 或 push；需要提交時列出建議的明確路徑供使用者確認。
+- 只寫可驗證的事實；沒有執行過的檢查，寫「未驗證」，不寫「應該可以」。
+- 檔案用相對路徑；列出受影響的檔案，不貼 diff。
+- 工作目錄裡不是自己改的未提交修改，記在交接單的「未提交的變更」並註明來源不明，不要代為整理。
+- 署名：changelog 的 agent 欄位寫實際的工具與模型，例如 `Claude Code (模型名稱)` 或 `Codex (模型名稱)`；不要從舊紀錄抄。
