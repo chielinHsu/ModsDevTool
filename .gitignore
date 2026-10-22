@@ -9,3 +9,6 @@ mods/*/.claude-plugin/types/
 .claude/worktrees/
 CLAUDE.local.md
 .ai/bench/
+
+# AI agent local state
+perf/results/

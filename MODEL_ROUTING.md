@@ -2,7 +2,7 @@
 
 Claude Code 專屬。Codex 不載入 `.claude/agents` 或 Claude hooks，不適用本檔的自動建議；Codex 依 `AGENTS.md` 與共用流程工作。
 
-路由擴充版本：`routing-1`（2026-10-12）。骨架版本見 `.agents/harness/TEMPLATE_VERSION`。
+路由擴充版本：`routing-1`（2026-10-12）。骨架版本見 `.agents/harness/TEMPLATE_VERSION`（2.0.0 起，見 `docs/adr/002-ai-structure-2-0-0.md`）。
 
 ## 角色
 
@@ -68,6 +68,8 @@ Claude Code 專屬。Codex 不載入 `.claude/agents` 或 Claude hooks，不適�
 - 只在獨立子任務、可平行處理、大量資料整理或需要不同推理能力時委派；主 agent 足以完成的小任務直接處理，不為分級而開 agent。
 - 委派時提供：目標、範圍、相關檔案、驗收條件、已知證據、失敗紀錄。唯讀角色需要命令輸出時，由主 agent 先執行並附上。
 - 架構角色把計畫交回主 agent，由主 agent 或 developer 系列執行已授權的實作。
+- **architect／architect-deep 的計畫由主 agent 寫進**需求進度表（`docs/current-status.md`）與 `docs/plan/<ID>-<slug>.md`（`engineering-workflow.md`「需求展開與進度表」）：架構角色回報時把計畫拆成可編號的細項（`Rnn.m`），每項寫清楚內容、檔案與驗證方式；subagent 不直接改這兩份文件。developer 系列則在回報中逐項列出細項的結果，由主 agent 更新狀態。
+- 委派時 prompt 明寫「回覆使用繁體中文（zh-TW）」（`AGENTS.md` 第 1 條）；subagent 看不到本對話。subagent 回報的測試結果是未驗證的，主 agent 核對後才能寫成 `VERIFIED`。
 - 主 agent 必須核對 subagent 的重要結論與驗證證據，再回報使用者。
 
 ## 驗證
@@ -80,6 +82,7 @@ Claude Code 專屬。Codex 不載入 `.claude/agents` 或 Claude hooks，不適�
 - 事件：`UserPromptSubmit`；輸出 `hookSpecificOutput.additionalContext`，內容為建議 agent、model、effort、各項分數、範圍、驗證成本、理由與升級狀態。
 - **只提供建議，不會自動切換主 session 的模型或 effort**；主 agent 讀取實際內容後重新判斷。
 - 忽略：`/` 開頭指令、`!` shell、`<task-notification>`、`<system-reminder>`、`<ci-monitor-event>`、Artifact 留言等背景事件。
+- 接線在 `.claude/settings.json`，指令寫成 `node "${CLAUDE_PROJECT_DIR}/.claude/hooks/model_router.mjs"`：本機以 PowerShell 執行 hook，沒有大括號的 `$CLAUDE_PROJECT_DIR` 會展開成空字串；`check-model-routing.mjs` 檢查這個寫法並拒絕舊寫法。
 - 狀態依專案路徑與 session 雜湊隔離，記錄失敗次數、升級下限；成功後重置。
 - 壞輸入、狀態檔損壞或寫入失敗都靜默略過（exit 0），不阻斷需求；不呼叫外部模型或 API。
 

@@ -28,6 +28,7 @@ effort: medium
 2. 只改委派範圍；保留無關內容。
 3. 執行 `AI_CONTEXT.md` 記載的相關驗證指令，如實回報結果。
 4. 列出修改檔案與 diff 摘要，供主 agent 審查。
+5. 主 agent 沒有明確交付時，不自行改寫 `docs/current-status.md` 的需求進度表與 `docs/plan/`；進度由主 agent 更新，你只在回報中逐項列出細項（`Rnn.m`）的結果。
 
 ## 工具邊界
 

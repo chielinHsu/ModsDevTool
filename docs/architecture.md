@@ -1,11 +1,12 @@
 # 系統架構
 
-> 描述「現在的結構」，原地修改。為什麼這樣設計、否決過什麼，記在 `decisions.md`（索引）與 `docs/adr/`，不要寫在這裡。
+> 描述「現在的結構」，原地修改。為什麼這樣設計、否決過什麼，記在 `decisions.md`（索引）與 `docs/adr/`，不要寫在這裡。總體計畫見 [00-master-plan.md](00-master-plan.md)。
 
 ## 修改紀錄
 
 | 日期 | 修改者 | 說明 |
 |---|---|---|
+| 2026-10-22 | Claude Code (Sonnet 5.5) | 導入 AI 結構 2.0.0（[ADR-002](adr/002-ai-structure-2-0-0.md)）：加上總體計畫連結；結構內容未變 |
 | 2026-10-12 | Claude Code (Claude Opus 5.5) | 套用 AutomaticDetectionDev 範本（[ADR-000](adr/000-ai-agent-structure.md)）：加上本表；`push`／`sync` 只在 `main` 執行（`--dry-run` 不限），commit 訊息由 `buildCommitMessage` 依 `project-rules.md` 產生、寫成檔案後 `git commit -F`（[ADR-001](adr/001-mods-sync-and-install.md) 的後續） |
 | 2026-10-12 | Claude Code (Claude Opus 5.5) | 建立：同步腳本、三個位置、資料流與判定規則（[ADR-001](adr/001-mods-sync-and-install.md)） |
 

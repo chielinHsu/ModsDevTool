@@ -45,3 +45,7 @@ AutomaticDetectionDev 的 `ai-project-template/`（版本 1.0.0）是跨專案�
 | `3bb5b13` | `70a0899` |
 | `14cf7b4` | `b1cbf7a` |
 | `0ed9666`（合併） | `d5efbc9` |
+
+## 後續（2026-10-22）：升為結構 2.0.0
+
+[ADR-002](002-ai-structure-2-0-0.md) 把結構版本由 1.0.0 升為 2.0.0。與本篇的差異：上面「否決的替代方案」中的 Step Protocol、四種輸出、`docs/plan`、`docs/steps` 已改為採用（四種輸出只適用「功能」類需求與步驟）；決定 3 的 Commit 訊息改以上層 `D:\ClaudeWork\CLAUDE.md` 為準，內容與格式不變；Git 授權不變（使用者同意後在工作分支 commit、`merge --no-ff` 回 `main`，不包含 push）。其餘決定（模型路由保留、一檔一決策）不變。

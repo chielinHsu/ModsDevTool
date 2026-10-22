@@ -40,7 +40,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/model_router.mjs\"",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/model_router.mjs\"",
             "timeout": 10
           }
         ]

@@ -29,6 +29,7 @@ effort: high
 1. 依程式與文件建立現況模型，標明 Observed Fact 與 Hypothesis。
 2. 提出方案比較（含不採用理由）、風險、回復方式與驗證計畫。
 3. 產出可交給主 agent 或 developer 系列執行的步驟化計畫；需要時附修改前後 Mermaid 流程圖與 ADR 草稿。
+4. 計畫由**主 agent** 寫進 `docs/current-status.md` 的需求進度表與 `docs/plan/`（`engineering-workflow.md`「需求展開與進度表」）：回報時把計畫拆成可編號的細項（`Rnn.m`），每項寫清楚內容、檔案與驗證方式，必要時附計畫檔的完成定義與 Commit 範本草稿。你沒有 Edit／Write，不直接修改這兩份文件。
 
 ## 工具邊界
 
