@@ -26,8 +26,8 @@
 | `scripts/mods.mjs` | 同步腳本的指令列：git、`claude` CLI、commit 訊息 |
 | `scripts/mods/lib.mjs` | 同步核心：找 mod、比對內容、複製、註冊 `CLAUDE_CODE_PLUGIN_DIRS`、產生 commit 訊息 |
 | `tests/mods.test.mjs` | 同步核心的測試（暫存資料夾，不碰真實設定） |
-| `docs/` | 架構、決策（`decisions.md` 索引 + `adr/`）、目前進度、AI 工作紀錄 |
-| `.agents/`、`.claude/`、`.ai/`、`scripts/ai/`、`MODEL_ROUTING.md` | AI agent 的規範、skill、角色、路由 hook、交接單與檢查腳本，各檔職責見 `.agents/harness/engineering-workflow.md` 第 0 節 |
+| `docs/` | 總體計畫（`00-master-plan.md`）、架構、決策（`decisions.md` 索引 + `adr/`）、需求進度表（`current-status.md` 開頭）、計畫檔（`plan/`）、步驟輸出（`steps/`）、AI 工作紀錄（`changelog-ai.md`） |
+| `.agents/`、`.claude/`、`.ai/`、`scripts/ai/`、`tools/`、`MODEL_ROUTING.md` | AI agent 的規範、skill、角色、路由 hook、交接單與檢查腳本，各檔職責見 `.agents/harness/engineering-workflow.md` 第 0 節 |
 | `~/.claude/mods/<name>/` | 本機安裝位置（不在 repo） |
 | `~/.claude/dev-mods/<session>/<name>/` | Claude Code session 中開發的 mod 草稿（不在 repo） |
 
@@ -43,13 +43,14 @@
 | 驗證單一 mod | `claude plugin validate mods/<name>`、`claude plugin test mods/<name>` | 需要 `claude` CLI |
 | 驗證 marketplace | `claude plugin validate .` | |
 | AI 結構檢查 | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ai/check-ai-structure.ps1` | `-Strict` 時 `TODO(project)` 也算失敗 |
-| 技能鏡像 | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ai/sync-skills.ps1` | |
+| 技能鏡像 | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ai/sync-skills.ps1` | 加 `-Check` 只檢查不寫入 |
+| STE lint（四種輸出的 spec.md／explainer.html） | `node tools/ste-lint.mjs` | 只檢查句長與被動語態 |
 | 模型路由檢查 | `node scripts/ai/check-model-routing.mjs` | 不呼叫模型 API |
 
 `VERIFIED` 的定義：
 - 改同步腳本：`node --test tests/mods.test.mjs` 全部通過，且相關指令以 `--dry-run` 或暫存設定目錄（`MODS_CLAUDE_DIR`）實際跑過。
 - 改 mod：`claude plugin validate` 與 `claude plugin test` 通過，**且**在 Claude Code 裡熱重載後實際看到畫面或行為；只有前兩項時寫 `PARTIALLY VERIFIED`。
-- 改 AI 協作檔：`check-ai-structure.ps1` 無 FAIL；動到路由時另加 `check-model-routing.mjs` 全數通過。
+- 改 AI 協作檔：`check-ai-structure.ps1 -Strict` 無 FAIL、`sync-skills.ps1 -Check` 一致；動到路由時另加 `check-model-routing.mjs` 全數通過；有 `docs/steps/` 的 spec／explainer 時加 `node tools/ste-lint.mjs` 無 error。
 
 ## 限制與不變條件
 
@@ -67,12 +68,14 @@
 
 | 任務 | 必讀文件／skill | 注意 |
 |---|---|---|
-| 接續上一位 agent 的工作 | `.ai/handoff.md`、`docs/changelog-ai.md` | 先看 `git status`，別覆蓋未完成的修改 |
+| 接續上一位 agent 的工作 | `.ai/handoff.md`、`docs/current-status.md`（需求進度表）、`docs/changelog-ai.md` | 先看 `git status`，別覆蓋未完成的修改 |
+| 展開需求、追蹤進度 | `docs/current-status.md`、`docs/plan/_template.md`、`engineering-workflow.md`「需求展開與進度表」 | 非單純需求實作前先展開成細項 |
+| 做一個步驟（Step Protocol） | `docs/00-master-plan.md`、`docs/plan/<ID>-*.md`、`project-rules.md`、`docs/steps/_template/` | 四種輸出只適用「功能」類需求與步驟 |
 | 新增或修改某個 mod | `mods/<name>/`、`plugin-authoring` skill（Claude Code） | 不直接改 `~/.claude/` 底下的檔案 |
 | 改同步腳本 | `scripts/mods/lib.mjs`、`scripts/mods.mjs`、`tests/mods.test.mjs`、`docs/architecture.md` | 改行為要補測試 |
 | 改安裝或註冊方式 | `docs/architecture.md`、`docs/adr/001-mods-sync-and-install.md` | 已記錄的決定沒有新證據不推翻 |
 | 換機台或第一次使用 | `README.md` | |
-| AI 協作結構與路由 | `docs/adr/000-ai-agent-structure.md`、`MODEL_ROUTING.md`、`scripts/ai/` | 範本管理的檔案不在專案裡改 |
+| AI 協作結構與路由 | `docs/adr/000-ai-agent-structure.md`、`docs/adr/002-ai-structure-2-0-0.md`、`MODEL_ROUTING.md`、`scripts/ai/` | 範本管理的檔案不在專案裡改 |
 | 收工、換 agent | `ai-handoff` skill | commit 訊息照 `project-rules.md`「Commit 訊息」 |
 
 ## 詞彙表
@@ -83,7 +86,8 @@
 | draft | `~/.claude/dev-mods/` 裡 session 中開發、熱重載的 mod |
 | installed | `~/.claude/mods/<name>/` 的 mod |
 | registered | 安裝位置已列在 `CLAUDE_CODE_PLUGIN_DIRS` |
-| 範本管理 | 由 AutomaticDetectionDev 的 `ai-project-template` 維護、`-Refresh` 會覆蓋的檔案 |
+| 範本管理 | 由 `ai-project-template`（2.0.0 在 AutoCadCreated 維護）維護、`-Refresh` 會覆蓋的檔案 |
+| 需求進度表 | `docs/current-status.md` 開頭的表格；需求編號 `Rnn`、細項 `Rnn.m` |
 
 ## 範圍外
 

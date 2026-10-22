@@ -29,6 +29,7 @@ effort: high
 1. 先蒐集證據並重現問題；區分 Observed Fact、Hypothesis、Conclusion。
 2. 跨函式或跨模組變更，依實際程式碼提供修改前後 Mermaid 流程圖。
 3. 實作後執行相關驗證，記錄 Decision／Evidence／Verification。
+4. 主 agent 沒有明確交付時，不自行改寫 `docs/current-status.md` 的需求進度表與 `docs/plan/`；進度由主 agent 更新，你只在回報中逐項列出細項（`Rnn.m`）的結果。
 
 ## 工具邊界
 

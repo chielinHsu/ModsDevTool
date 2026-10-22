@@ -143,7 +143,9 @@ if (settings) {
   const cmds = groups.flatMap((g) => (g.hooks || []).map((h) => h.command || ''));
   const cmd = cmds.find((c) => c.includes('model_router.mjs')) || '';
   check('UserPromptSubmit 接上 model_router.mjs', cmd);
-  check('hook 指令以 $CLAUDE_PROJECT_DIR 引用並加引號（支援空白路徑）', /"\$CLAUDE_PROJECT_DIR\/\.claude\/hooks\/model_router\.mjs"/.test(cmd), cmd);
+  // 本機以 PowerShell 執行 hook 時，沒有大括號的 $CLAUDE_PROJECT_DIR 會展開成空字串（QAdvancePinInspect 2026-10-19 以 --debug hooks 實測）
+  check('hook 指令以 ${CLAUDE_PROJECT_DIR} 引用並加引號（支援空白路徑、PowerShell）', /"\$\{CLAUDE_PROJECT_DIR\}\/\.claude\/hooks\/model_router\.mjs"/.test(cmd), cmd);
+  check('hook 指令不使用沒有大括號的 $CLAUDE_PROJECT_DIR', !/\$CLAUDE_PROJECT_DIR/.test(cmd), cmd);
   check('settings 未設定 bypassPermissions', settings.permissions?.defaultMode !== 'bypassPermissions');
 }
 const routerSource = fs.readFileSync(ROUTER, 'utf8');

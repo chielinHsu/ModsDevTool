@@ -24,6 +24,33 @@
 - 下一位 agent 需要知道的限制、否決的做法、不要還原的修改
 ```
 
+## 2026-10-22 — Claude Code (Sonnet 5.5)（導入 AI 結構 2.0.0，ADR-002）
+
+### 完成
+- 在 origin 最新版（26f356c）上重新套用 AI 結構 2.0.0（先前在舊歷史上做過一次，origin 改寫歷史後重做），保留 origin 的 commit 規範、同步腳本 commit 訊息規則與 ADR-001。
+- 以 `New-AiProject.ps1 -Refresh` 換上範本管理檔：`engineering-workflow.md`（新增「需求展開與進度表」）、`TEMPLATE_VERSION`（2.0.0）、`ai-handoff` skill 與鏡像、`check-ai-structure.ps1`、`sync-skills.ps1`；新增 `tools/ste-lint.mjs`、`docs/plan/_template.md`、`docs/adr/_template.md`、`docs/steps/_template/`；`.gitignore` 補 `perf/results/`。
+- 專案擁有檔合併：`AGENTS.md` 改為四條規則；`CLAUDE.md`、`project-rules.md`（SOLID、四種輸出、Step Protocol、與上層規則的關係、Git 授權維持不含 push）、`AI_CONTEXT.md`、`MODEL_ROUTING.md`、`.claude/agents/*` 補上 2.0.0 段落。
+- 新增 `docs/00-master-plan.md`、`docs/adr/002-ai-structure-2-0-0.md`；`docs/decisions.md` 加索引；`docs/current-status.md` 開頭加需求進度表（回填 R01–R06，列出 R07–R11）。
+- 使用者同意後，`.claude/settings.json` 的 hook 指令改成 `${CLAUDE_PROJECT_DIR}`（只改這一個字串），`check-model-routing.mjs` 同步改檢查新寫法並拒絕沒有大括號的寫法。
+
+### 修改的檔案
+- 修改：`AGENTS.md`、`CLAUDE.md`、`AI_CONTEXT.md`、`MODEL_ROUTING.md`、`.agents/harness/engineering-workflow.md`、`.agents/harness/project-rules.md`、`.agents/harness/TEMPLATE_VERSION`、`.agents/skills/ai-handoff/SKILL.md`、`.claude/skills/ai-handoff/SKILL.md`（鏡像）、`.claude/agents/{architect,architect-deep,developer,developer-deep}.md`、`.claude/settings.json`、`.gitignore`、`scripts/ai/check-ai-structure.ps1`、`scripts/ai/sync-skills.ps1`、`scripts/ai/check-model-routing.mjs`、`.ai/handoff.md`、`docs/{architecture,changelog-ai,current-status,decisions}.md`、`docs/adr/000-ai-agent-structure.md`
+- 新增：`docs/00-master-plan.md`、`docs/adr/002-ai-structure-2-0-0.md`、`docs/adr/_template.md`、`docs/plan/_template.md`、`docs/steps/_template/*`、`tools/ste-lint.mjs`
+- 未動：`mods/`、`tests/`、`scripts/mods*`、`README.md`、`package.json`
+
+### 驗證
+- `sync-skills.ps1 -Check`、`check-ai-structure.ps1 -Strict`、`check-model-routing.mjs`（163/163）、`node --test tests/mods.test.mjs`（21/21）、`node tools/ste-lint.mjs`（0 錯誤）的結果見 `.ai/handoff.md`。
+- 靜態檢查通過不等於 Claude Code 實際載入：hook、agents、skill 在本專案 session 的載入未驗證。
+
+### 未完成
+- 在本專案的 Claude Code session 實際確認 hook 會輸出路由建議。
+- `docs/current-status.md`「待使用者決定」六項（含 settings.json 的 `git add`／`git commit` ask 規則；Git 授權維持不含 push）。
+
+### 注意事項
+- 範本管理的檔案不要在本專案修改；`skill-sync.json` 與 2.0.0 格式相同，未更動。
+- 本專案有 remote 且沒有 CI：PR 開出後不合併，等使用者決定。
+- 提交身分、訊息格式與完成後流程以上層 `D:\ClaudeWork\CLAUDE.md` 為準。
+
 ## 2026-10-12 — Claude Code (Claude Opus 5.5)（改寫舊 commit 並強制推送）
 
 ### 完成
